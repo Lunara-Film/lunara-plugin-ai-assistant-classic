@@ -375,18 +375,22 @@ final class Lunara_AI_Assistant_Classic {
 		try {
 			$base = admin_url();
 			$url  = admin_url( 'options-general.php?page=lunara-ai-assistant-classic' );
+
+			if ( ! is_string( $base ) || ! is_string( $url ) ) {
+				throw new UnexpectedValueException( 'Invalid admin URL type.' );
+			}
+
+			if ( 1 === preg_match( '/[\x00-\x1F\x7F\\\\%]/', $base . $url ) ) {
+				throw new UnexpectedValueException( 'Ambiguous admin URL characters.' );
+			}
+
+			$base_parts = parse_url( $base );
+			$url_parts  = parse_url( $url );
 		} catch ( Throwable $error ) {
 			$facilities_available = false;
 			return '';
 		}
 
-		if ( ! is_string( $base ) || ! is_string( $url ) ) {
-			$facilities_available = false;
-			return '';
-		}
-
-		$base_parts = parse_url( $base );
-		$url_parts  = parse_url( $url );
 		if ( ! is_array( $base_parts ) || ! is_array( $url_parts ) ) {
 			$facilities_available = false;
 			return '';
@@ -394,30 +398,34 @@ final class Lunara_AI_Assistant_Classic {
 
 		$base_scheme = isset( $base_parts['scheme'] ) ? strtolower( $base_parts['scheme'] ) : '';
 		$url_scheme  = isset( $url_parts['scheme'] ) ? strtolower( $url_parts['scheme'] ) : '';
-		$base_host   = isset( $base_parts['host'] ) ? strtolower( $base_parts['host'] ) : '';
-		$url_host    = isset( $url_parts['host'] ) ? strtolower( $url_parts['host'] ) : '';
-		$base_port   = isset( $base_parts['port'] ) ? (int) $base_parts['port'] : null;
-		$url_port    = isset( $url_parts['port'] ) ? (int) $url_parts['port'] : null;
 		$base_path   = isset( $base_parts['path'] ) ? $base_parts['path'] : '';
 		$url_path    = isset( $url_parts['path'] ) ? $url_parts['path'] : '';
 		$query       = isset( $url_parts['query'] ) ? $url_parts['query'] : '';
 		$valid       = in_array( $base_scheme, array( 'http', 'https' ), true )
-			&& $base_scheme === $url_scheme
-			&& '' !== $base_host
-			&& $base_host === $url_host
-			&& $base_port === $url_port
+			&& in_array( $url_scheme, array( 'http', 'https' ), true )
+			&& ! empty( $base_parts['host'] )
+			&& ! empty( $url_parts['host'] )
+			&& 0 === strpos( $base_path, '/' )
+			&& 0 === strpos( $url_path, '/' )
+			&& false === strpos( $base_path, '//' )
+			&& false === strpos( $url_path, '//' )
 			&& rtrim( $base_path, '/' ) . '/options-general.php' === $url_path
 			&& 'page=lunara-ai-assistant-classic' === $query
+			&& ! isset( $base_parts['query'] )
+			&& ! isset( $base_parts['user'] )
+			&& ! isset( $base_parts['pass'] )
+			&& ! isset( $base_parts['fragment'] )
 			&& ! isset( $url_parts['user'] )
 			&& ! isset( $url_parts['pass'] )
-			&& ! isset( $url_parts['fragment'] );
+			&& ! isset( $url_parts['fragment'] )
+			&& 0 === preg_match( '#(?:^|/)\.{1,2}(?:/|$)#', $base_path . "\n" . $url_path );
 
 		if ( ! $valid ) {
 			$facilities_available = false;
 			return '';
 		}
 
-		return $url;
+		return $url_path . '?' . $query;
 	}
 
 	/**

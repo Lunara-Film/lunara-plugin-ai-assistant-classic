@@ -35,6 +35,7 @@ Do not activate this alongside another plugin that uses the same editor surface 
 = 0.6.2 =
 * Added a capability-gated, redacted Site Studio status API and canonical settings URL helper.
 * Status reports fixed provider/model, editorial-surface, and key-presence fields without exposing credentials, prompts, history, or raw settings.
+* Settings destinations are validated and emitted root-relative so filtered foreign origins cannot enter Site Studio status.
 
 = 0.6.0 =
 * Added an AI provider selector (Anthropic/Claude, OpenAI, Google Gemini, or Automatic). Choosing a provider routes every task to it so one API key is enough. The main Generate box previously required OpenAI specifically; it now uses the selected provider.

@@ -7,9 +7,11 @@
 $root = dirname( __DIR__ );
 $plugin = file_get_contents( $root . DIRECTORY_SEPARATOR . 'lunara-ai-assistant-classic.php' );
 $readme = file_get_contents( $root . DIRECTORY_SEPARATOR . 'README.md' );
+$wordpress_readme = file_get_contents( $root . DIRECTORY_SEPARATOR . 'readme.txt' );
+$workflow = file_get_contents( $root . DIRECTORY_SEPARATOR . '.github' . DIRECTORY_SEPARATOR . 'workflows' . DIRECTORY_SEPARATOR . 'lint.yml' );
 $failures = array();
 
-if ( false === $plugin || false === $readme ) {
+if ( false === $plugin || false === $readme || false === $wordpress_readme || false === $workflow ) {
 	fwrite( STDERR, "Could not read release files.\n" );
 	exit( 1 );
 }
@@ -31,6 +33,18 @@ if ( false !== strpos( $plugin, ':generateContent?key=' ) ) {
 }
 if ( false === strpos( $readme, 'Current baseline: `0.6.2`.' ) ) {
 	$failures[] = 'README baseline is not 0.6.2';
+}
+if ( false === strpos( $wordpress_readme, 'Stable tag: 0.6.2' ) ) {
+	$failures[] = 'WordPress stable tag is not 0.6.2';
+}
+if ( false === strpos( $wordpress_readme, '= 0.6.2 =' ) ) {
+	$failures[] = 'WordPress changelog is missing 0.6.2';
+}
+if ( false === strpos( $workflow, "php-version: ['7.4', '8.2']" ) ) {
+	$failures[] = 'CI workflow does not enforce PHP 7.4 and 8.2';
+}
+if ( false === strpos( $workflow, 'php tests/site-studio-status-contract.php' ) ) {
+	$failures[] = 'CI workflow does not run the Site Studio status contract';
 }
 
 if ( $failures ) {

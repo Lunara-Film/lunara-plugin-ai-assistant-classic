@@ -19,7 +19,7 @@ Current baseline: `0.6.2`.
 ### 0.6.2 Site Studio status API
 
 - Adds a capability-gated, redacted status projection for Site Studio.
-- Reports only allowlisted provider/model identifiers, enabled editorial surfaces, key-presence booleans, and the canonical settings destination.
+- Reports only allowlisted provider/model identifiers, enabled editorial surfaces, key-presence booleans, and a validated root-relative settings destination that cannot carry a filtered foreign origin.
 - Keeps credential option autoload migration deferred until a real WordPress database test can prove safe, byte-preserving, idempotent behavior.
 
 ### 0.6.1 Gemini credential hardening

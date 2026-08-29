@@ -26,6 +26,10 @@ if ( false === $scenario || '' === $scenario ) {
 		'unsafe-admin-url',
 		'uniform-filter-admin-url',
 		'subdirectory-admin-url',
+		'multisite-admin-url',
+		'non-admin-root-path',
+		'arbitrary-non-admin-path',
+		'raw-space-admin-path',
 		'extra-query-admin-url',
 		'unsafe-admin-paths',
 		'throwing-admin-url',
@@ -193,6 +197,30 @@ function admin_url( $path = '' ) {
 		if ( 'subdirectory' === $GLOBALS['lunara_test']['url_mode'] ) {
 			return 'https://mapped.example:8443/wordpress/wp-admin/';
 		}
+		if ( 'multisite-subdirectory' === $GLOBALS['lunara_test']['url_mode'] ) {
+			return 'https://mapped.example/network/site-42/wp-admin/';
+		}
+		if ( 'non-admin-root' === $GLOBALS['lunara_test']['url_mode'] ) {
+			return 'https://attacker.example/';
+		}
+		if ( 'arbitrary-directory' === $GLOBALS['lunara_test']['url_mode'] ) {
+			return 'https://attacker.example/evil/';
+		}
+		if ( 'raw-space-subdirectory' === $GLOBALS['lunara_test']['url_mode'] ) {
+			return 'https://example.test/word press/wp-admin/';
+		}
+		if ( 'overlong-segment' === $GLOBALS['lunara_test']['url_mode'] ) {
+			return 'https://example.test/' . str_repeat( 'a', 65 ) . '/wp-admin/';
+		}
+		if ( 'too-many-segments' === $GLOBALS['lunara_test']['url_mode'] ) {
+			return 'https://example.test/' . str_repeat( 'a/', 17 ) . 'wp-admin/';
+		}
+		if ( 'raw-nonascii' === $GLOBALS['lunara_test']['url_mode'] ) {
+			return 'https://example.test/café/wp-admin/';
+		}
+		if ( 'raw-host-byte' === $GLOBALS['lunara_test']['url_mode'] ) {
+			return 'https://exa"mple.test/wp-admin/';
+		}
 		return 'https://example.test/wp-admin/';
 	}
 	if ( 'uniform-cross-origin' === $GLOBALS['lunara_test']['url_mode'] ) {
@@ -203,6 +231,30 @@ function admin_url( $path = '' ) {
 	}
 	if ( 'subdirectory' === $GLOBALS['lunara_test']['url_mode'] ) {
 		return 'https://mapped.example:8443/wordpress/wp-admin/' . $path;
+	}
+	if ( 'multisite-subdirectory' === $GLOBALS['lunara_test']['url_mode'] ) {
+		return 'https://mapped.example/network/site-42/wp-admin/' . $path;
+	}
+	if ( 'non-admin-root' === $GLOBALS['lunara_test']['url_mode'] ) {
+		return 'https://attacker.example/' . $path;
+	}
+	if ( 'arbitrary-directory' === $GLOBALS['lunara_test']['url_mode'] ) {
+		return 'https://attacker.example/evil/' . $path;
+	}
+	if ( 'raw-space-subdirectory' === $GLOBALS['lunara_test']['url_mode'] ) {
+		return 'https://example.test/word press/wp-admin/' . $path;
+	}
+	if ( 'overlong-segment' === $GLOBALS['lunara_test']['url_mode'] ) {
+		return 'https://example.test/' . str_repeat( 'a', 65 ) . '/wp-admin/' . $path;
+	}
+	if ( 'too-many-segments' === $GLOBALS['lunara_test']['url_mode'] ) {
+		return 'https://example.test/' . str_repeat( 'a/', 17 ) . 'wp-admin/' . $path;
+	}
+	if ( 'raw-nonascii' === $GLOBALS['lunara_test']['url_mode'] ) {
+		return 'https://example.test/café/wp-admin/' . $path;
+	}
+	if ( 'raw-host-byte' === $GLOBALS['lunara_test']['url_mode'] ) {
+		return 'https://exa"mple.test/wp-admin/' . $path;
 	}
 	if ( 'cross-origin' === $GLOBALS['lunara_test']['url_mode'] ) {
 		return 'https://attacker.example/wp-admin/' . $path;
@@ -516,13 +568,21 @@ if ( in_array( $scenario, array( 'constant-whitespace-shadow', 'constant-precede
 	exit( 0 );
 }
 
-if ( in_array( $scenario, array( 'unsafe-admin-url', 'uniform-filter-admin-url', 'subdirectory-admin-url', 'extra-query-admin-url', 'unsafe-admin-paths', 'throwing-admin-url' ), true ) ) {
+if ( in_array( $scenario, array( 'unsafe-admin-url', 'uniform-filter-admin-url', 'subdirectory-admin-url', 'multisite-admin-url', 'non-admin-root-path', 'arbitrary-non-admin-path', 'raw-space-admin-path', 'extra-query-admin-url', 'unsafe-admin-paths', 'throwing-admin-url' ), true ) ) {
 	if ( 'unsafe-admin-url' === $scenario ) {
 		$GLOBALS['lunara_test']['url_mode'] = 'cross-origin';
 	} elseif ( 'uniform-filter-admin-url' === $scenario ) {
 		$GLOBALS['lunara_test']['url_mode'] = 'uniform-cross-origin';
 	} elseif ( 'subdirectory-admin-url' === $scenario ) {
 		$GLOBALS['lunara_test']['url_mode'] = 'subdirectory';
+	} elseif ( 'multisite-admin-url' === $scenario ) {
+		$GLOBALS['lunara_test']['url_mode'] = 'multisite-subdirectory';
+	} elseif ( 'non-admin-root-path' === $scenario ) {
+		$GLOBALS['lunara_test']['url_mode'] = 'non-admin-root';
+	} elseif ( 'arbitrary-non-admin-path' === $scenario ) {
+		$GLOBALS['lunara_test']['url_mode'] = 'arbitrary-directory';
+	} elseif ( 'raw-space-admin-path' === $scenario ) {
+		$GLOBALS['lunara_test']['url_mode'] = 'raw-space-subdirectory';
 	} elseif ( 'extra-query-admin-url' === $scenario ) {
 		$GLOBALS['lunara_test']['url_mode'] = 'extra-query';
 	} else {
@@ -543,8 +603,18 @@ if ( in_array( $scenario, array( 'unsafe-admin-url', 'uniform-filter-admin-url',
 		lunara_test_assert_same( 'ready', $status['state'], 'legitimate subdirectory admin paths may retain configuration readiness' );
 		exit( 0 );
 	}
+	if ( 'multisite-admin-url' === $scenario ) {
+		lunara_test_assert_same( '/network/site-42/wp-admin/options-general.php?page=lunara-ai-assistant-classic', $status['url'], 'multisite-style multi-segment admin paths must be preserved root-relative' );
+		lunara_test_assert_same( 'ready', $status['state'], 'canonical multisite-style admin paths may retain configuration readiness' );
+		exit( 0 );
+	}
+	if ( in_array( $scenario, array( 'non-admin-root-path', 'arbitrary-non-admin-path', 'raw-space-admin-path' ), true ) ) {
+		lunara_test_assert_same( '', $status['url'], 'noncanonical admin base paths must return an empty destination: ' . $scenario );
+		lunara_test_assert_same( 'unavailable', $status['state'], 'noncanonical admin base paths must make status unavailable: ' . $scenario );
+		exit( 0 );
+	}
 	if ( 'unsafe-admin-paths' === $scenario ) {
-		foreach ( array( 'fragment', 'userinfo', 'encoded-path', 'encoded-control', 'raw-control', 'backslash', 'dot-segment', 'uniform-double-slash-path', 'scheme-relative', 'malformed' ) as $url_mode ) {
+		foreach ( array( 'fragment', 'userinfo', 'encoded-path', 'encoded-control', 'raw-control', 'backslash', 'dot-segment', 'uniform-double-slash-path', 'overlong-segment', 'too-many-segments', 'raw-nonascii', 'raw-host-byte', 'scheme-relative', 'malformed' ) as $url_mode ) {
 			$GLOBALS['lunara_test']['url_mode'] = $url_mode;
 			$status = lunara_ai_assistant_classic_site_studio_status();
 			lunara_test_assert_same( '', $status['url'], 'unsafe admin URL mode must return an empty destination: ' . $url_mode );

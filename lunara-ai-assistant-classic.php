@@ -380,8 +380,11 @@ final class Lunara_AI_Assistant_Classic {
 				throw new UnexpectedValueException( 'Invalid admin URL type.' );
 			}
 
-			if ( 1 === preg_match( '/[\x00-\x1F\x7F\\\\%]/', $base . $url ) ) {
+			if ( 1 === preg_match( '/[\x00-\x20\x7F-\xFF\\\\%]/', $base . $url ) ) {
 				throw new UnexpectedValueException( 'Ambiguous admin URL characters.' );
+			}
+			if ( false === filter_var( $base, FILTER_VALIDATE_URL ) || false === filter_var( $url, FILTER_VALIDATE_URL ) ) {
+				throw new UnexpectedValueException( 'Invalid admin URL syntax.' );
 			}
 
 			$base_parts = parse_url( $base );
@@ -401,15 +404,16 @@ final class Lunara_AI_Assistant_Classic {
 		$base_path   = isset( $base_parts['path'] ) ? $base_parts['path'] : '';
 		$url_path    = isset( $url_parts['path'] ) ? $url_parts['path'] : '';
 		$query       = isset( $url_parts['query'] ) ? $url_parts['query'] : '';
+		$canonical_base_path = 1 === preg_match( '#\A/(?:[A-Za-z0-9._~-]{1,64}/){0,16}wp-admin/\z#D', $base_path );
 		$valid       = in_array( $base_scheme, array( 'http', 'https' ), true )
 			&& in_array( $url_scheme, array( 'http', 'https' ), true )
 			&& ! empty( $base_parts['host'] )
 			&& ! empty( $url_parts['host'] )
-			&& 0 === strpos( $base_path, '/' )
+			&& $canonical_base_path
 			&& 0 === strpos( $url_path, '/' )
 			&& false === strpos( $base_path, '//' )
 			&& false === strpos( $url_path, '//' )
-			&& rtrim( $base_path, '/' ) . '/options-general.php' === $url_path
+			&& $base_path . 'options-general.php' === $url_path
 			&& 'page=lunara-ai-assistant-classic' === $query
 			&& ! isset( $base_parts['query'] )
 			&& ! isset( $base_parts['user'] )

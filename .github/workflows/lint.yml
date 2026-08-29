@@ -8,12 +8,15 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: ['7.4', '8.2']
     steps:
       - uses: actions/checkout@v4
 
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: ${{ matrix.php-version }}
 
       - name: PHP syntax
         run: |
@@ -24,6 +27,9 @@ jobs:
 
       - name: Release contract
         run: php tests/release-contract.php
+
+      - name: Site Studio status contract
+        run: php tests/site-studio-status-contract.php
 
       - name: JS syntax
         run: |

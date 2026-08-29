@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       LUNARA AI Assistant Classic
  * Description:       Private LUNARA editorial assistant for the Classic Editor, including Journal and Review post types.
- * Version:           0.6.1
+ * Version:           0.6.2
  * Author:            LUNARA FILM
  * Requires at least: 6.3
  * Requires PHP:      7.4
@@ -13,7 +13,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'LUNARA_AI_ASSISTANT_CLASSIC_VERSION', '0.6.1' );
+define( 'LUNARA_AI_ASSISTANT_CLASSIC_VERSION', '0.6.2' );
 define( 'LUNARA_AI_ASSISTANT_CLASSIC_FILE', __FILE__ );
 define( 'LUNARA_AI_ASSISTANT_CLASSIC_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LUNARA_AI_ASSISTANT_CLASSIC_URL', plugin_dir_url( __FILE__ ) );
@@ -205,6 +205,338 @@ final class Lunara_AI_Assistant_Classic {
 			'gemini'    => __( 'Google Gemini', 'lunara-ai-assistant-classic' ),
 		);
 		return isset( $labels[ $provider ] ) ? $labels[ $provider ] : ucfirst( (string) $provider );
+	}
+
+	/**
+	 * Return the fixed capability-denied Site Studio envelope.
+	 *
+	 * @return array
+	 */
+	private static function site_studio_denied_status() {
+		return array(
+			'state'      => 'unavailable',
+			'label'      => 'AI Assistant unavailable',
+			'message'    => 'AI Assistant status is unavailable.',
+			'updated_at' => '',
+			'url'        => '',
+			'capability' => 'manage_options',
+		);
+	}
+
+	/**
+	 * Convert a safe scalar to a string without invoking object methods.
+	 *
+	 * @param mixed $value Candidate value.
+	 * @return string|null
+	 */
+	private static function site_studio_scalar_string( $value ) {
+		if ( is_string( $value ) || is_int( $value ) || is_float( $value ) || is_bool( $value ) ) {
+			return (string) $value;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Resolve one effective provider key to presence only.
+	 *
+	 * Runtime precedence and whitespace shadowing intentionally match provider
+	 * requests: constant, provider environment variable(s), then saved fallback.
+	 *
+	 * @param string $provider Provider identifier.
+	 * @param array  $settings Saved settings projection.
+	 * @return bool
+	 */
+	private static function site_studio_key_is_present( $provider, $settings ) {
+		$constant_names = array(
+			'openai'    => 'LUNARA_OPENAI_API_KEY',
+			'anthropic' => 'LUNARA_ANTHROPIC_API_KEY',
+			'gemini'    => 'LUNARA_GEMINI_API_KEY',
+		);
+		$environment_names = array(
+			'openai'    => array( 'OPENAI_API_KEY' ),
+			'anthropic' => array( 'ANTHROPIC_API_KEY' ),
+			'gemini'    => array( 'GEMINI_API_KEY', 'GOOGLE_API_KEY' ),
+		);
+		$setting_names = array(
+			'openai'    => 'api_key',
+			'anthropic' => 'anthropic_api_key',
+			'gemini'    => 'gemini_api_key',
+		);
+
+		$constant_name = $constant_names[ $provider ];
+		if ( defined( $constant_name ) ) {
+			$value = constant( $constant_name );
+			if ( $value ) {
+				$value = self::site_studio_scalar_string( $value );
+				return null !== $value && '' !== trim( $value );
+			}
+		}
+
+		foreach ( $environment_names[ $provider ] as $environment_name ) {
+			$value = getenv( $environment_name );
+			if ( $value ) {
+				$value = self::site_studio_scalar_string( $value );
+				return null !== $value && '' !== trim( $value );
+			}
+		}
+
+		$setting_name = $setting_names[ $provider ];
+		$value        = array_key_exists( $setting_name, $settings ) ? self::site_studio_scalar_string( $settings[ $setting_name ] ) : '';
+		return null !== $value && '' !== trim( $value );
+	}
+
+	/**
+	 * Normalize an allowlisted provider model for status output.
+	 *
+	 * @param string $provider Provider identifier.
+	 * @param mixed  $model Candidate model.
+	 * @return string
+	 */
+	private static function site_studio_model( $provider, $model ) {
+		$model = self::site_studio_scalar_string( $model );
+		if ( null === $model ) {
+			return '';
+		}
+
+		if ( 'gemini' === $provider && 0 === strpos( $model, 'models/' ) ) {
+			$model = substr( $model, 7 );
+		}
+		if ( '' === $model || 80 < strlen( $model ) ) {
+			return '';
+		}
+
+		$patterns = array(
+			'openai'    => '/\A(?:gpt-[A-Za-z0-9][A-Za-z0-9._-]*|o[1-9][A-Za-z0-9._-]*)\z/D',
+			'anthropic' => '/\Aclaude-[A-Za-z0-9][A-Za-z0-9._-]*\z/D',
+			'gemini'    => '/\Agemini-[A-Za-z0-9][A-Za-z0-9._-]*\z/D',
+		);
+
+		return 1 === preg_match( $patterns[ $provider ], $model ) ? $model : '';
+	}
+
+	/**
+	 * Resolve registered, editor-supported saved surfaces without filters.
+	 *
+	 * @param mixed $raw Saved comma-separated surface slugs.
+	 * @param bool  $strict Whether to require the Site Studio slug grammar.
+	 * @param int   $limit Maximum result count; zero means unlimited.
+	 * @return array
+	 */
+	private static function resolve_saved_post_types( $raw, $strict = false, $limit = 0 ) {
+		if ( $strict && ! is_string( $raw ) ) {
+			return array();
+		}
+
+		$raw     = $strict ? $raw : (string) $raw;
+		$slugs   = array_map( 'trim', explode( ',', $raw ) );
+		$slugs   = $strict ? array_filter( $slugs, 'strlen' ) : array_filter( $slugs );
+		$seen    = array();
+		$enabled = array();
+
+		foreach ( $slugs as $slug ) {
+			if ( $strict ) {
+				if ( 1 !== preg_match( '/\A[a-z0-9_-]{1,20}\z/D', $slug ) ) {
+					continue;
+				}
+			} else {
+				$slug = sanitize_key( $slug );
+			}
+
+			if ( '' === $slug || isset( $seen[ $slug ] ) ) {
+				continue;
+			}
+			$seen[ $slug ] = true;
+
+			if ( post_type_exists( $slug ) && post_type_supports( $slug, 'editor' ) ) {
+				$enabled[] = $slug;
+			}
+
+			if ( 0 < $limit && count( $enabled ) >= $limit ) {
+				break;
+			}
+		}
+
+		return $enabled;
+	}
+
+	/**
+	 * Build and validate the canonical settings destination.
+	 *
+	 * @param bool $facilities_available Whether required WordPress facilities remain available.
+	 * @return string
+	 */
+	private static function site_studio_settings_url( &$facilities_available ) {
+		if ( ! function_exists( 'admin_url' ) ) {
+			$facilities_available = false;
+			return '';
+		}
+
+		try {
+			$base = admin_url();
+			$url  = admin_url( 'options-general.php?page=lunara-ai-assistant-classic' );
+		} catch ( Throwable $error ) {
+			$facilities_available = false;
+			return '';
+		}
+
+		if ( ! is_string( $base ) || ! is_string( $url ) ) {
+			$facilities_available = false;
+			return '';
+		}
+
+		$base_parts = parse_url( $base );
+		$url_parts  = parse_url( $url );
+		if ( ! is_array( $base_parts ) || ! is_array( $url_parts ) ) {
+			$facilities_available = false;
+			return '';
+		}
+
+		$base_scheme = isset( $base_parts['scheme'] ) ? strtolower( $base_parts['scheme'] ) : '';
+		$url_scheme  = isset( $url_parts['scheme'] ) ? strtolower( $url_parts['scheme'] ) : '';
+		$base_host   = isset( $base_parts['host'] ) ? strtolower( $base_parts['host'] ) : '';
+		$url_host    = isset( $url_parts['host'] ) ? strtolower( $url_parts['host'] ) : '';
+		$base_port   = isset( $base_parts['port'] ) ? (int) $base_parts['port'] : null;
+		$url_port    = isset( $url_parts['port'] ) ? (int) $url_parts['port'] : null;
+		$base_path   = isset( $base_parts['path'] ) ? $base_parts['path'] : '';
+		$url_path    = isset( $url_parts['path'] ) ? $url_parts['path'] : '';
+		$query       = isset( $url_parts['query'] ) ? $url_parts['query'] : '';
+		$valid       = in_array( $base_scheme, array( 'http', 'https' ), true )
+			&& $base_scheme === $url_scheme
+			&& '' !== $base_host
+			&& $base_host === $url_host
+			&& $base_port === $url_port
+			&& rtrim( $base_path, '/' ) . '/options-general.php' === $url_path
+			&& 'page=lunara-ai-assistant-classic' === $query
+			&& ! isset( $url_parts['user'] )
+			&& ! isset( $url_parts['pass'] )
+			&& ! isset( $url_parts['fragment'] );
+
+		if ( ! $valid ) {
+			$facilities_available = false;
+			return '';
+		}
+
+		return $url;
+	}
+
+	/**
+	 * Return a narrow, redacted status projection for Site Studio.
+	 *
+	 * @return array
+	 */
+	public static function site_studio_status() {
+		$denied = self::site_studio_denied_status();
+		if ( ! function_exists( 'current_user_can' ) ) {
+			return $denied;
+		}
+
+		try {
+			$allowed = current_user_can( 'manage_options' );
+		} catch ( Throwable $error ) {
+			return $denied;
+		}
+
+		if ( ! $allowed ) {
+			return $denied;
+		}
+
+		$facilities_available = true;
+		$settings             = array();
+		if ( ! function_exists( 'get_option' ) ) {
+			$facilities_available = false;
+		} else {
+			try {
+				$saved = get_option( self::OPTION_KEY, array() );
+				if ( is_array( $saved ) ) {
+					$settings = $saved;
+				}
+			} catch ( Throwable $error ) {
+				$facilities_available = false;
+			}
+		}
+
+		$key_presence = array(
+			'openai'    => self::site_studio_key_is_present( 'openai', $settings ),
+			'anthropic' => self::site_studio_key_is_present( 'anthropic', $settings ),
+			'gemini'    => self::site_studio_key_is_present( 'gemini', $settings ),
+		);
+		$provider     = isset( $settings['provider'] ) && is_string( $settings['provider'] ) ? $settings['provider'] : 'auto';
+		if ( ! in_array( $provider, array( 'openai', 'anthropic', 'gemini' ), true ) ) {
+			$provider = 'auto';
+		}
+
+		if ( 'auto' === $provider ) {
+			$provider = 'anthropic';
+			foreach ( array( 'anthropic', 'openai', 'gemini' ) as $candidate ) {
+				if ( $key_presence[ $candidate ] ) {
+					$provider = $candidate;
+					break;
+				}
+			}
+		}
+
+		$model_keys = array(
+			'openai'    => 'model',
+			'anthropic' => 'anthropic_model',
+			'gemini'    => 'gemini_model',
+		);
+		$model_defaults = array(
+			'openai'    => 'gpt-4o',
+			'anthropic' => 'claude-sonnet-5',
+			'gemini'    => 'gemini-2.0-flash',
+		);
+		$model_key = $model_keys[ $provider ];
+		$model     = array_key_exists( $model_key, $settings ) ? $settings[ $model_key ] : $model_defaults[ $provider ];
+		$model     = self::site_studio_model( $provider, $model );
+
+		$surfaces_raw = array_key_exists( 'post_types', $settings ) ? $settings['post_types'] : 'post,journal,review';
+		$surfaces     = array();
+		if ( ! function_exists( 'post_type_exists' ) || ! function_exists( 'post_type_supports' ) ) {
+			$facilities_available = false;
+		} else {
+			try {
+				$surfaces = self::resolve_saved_post_types( $surfaces_raw, true, 16 );
+			} catch ( Throwable $error ) {
+				$facilities_available = false;
+				$surfaces             = array();
+			}
+		}
+
+		$url = self::site_studio_settings_url( $facilities_available );
+		if ( ! $facilities_available ) {
+			$state   = 'unavailable';
+			$label   = 'AI Assistant unavailable';
+			$message = 'AI Assistant status is unavailable.';
+		} elseif ( $key_presence[ $provider ] && '' !== $model && ! empty( $surfaces ) ) {
+			$state   = 'ready';
+			$label   = 'AI Assistant ready';
+			$message = 'AI Assistant configuration is ready for editorial use.';
+		} else {
+			$state   = 'needs_attention';
+			$label   = 'AI Assistant needs attention';
+			$message = 'AI Assistant configuration needs attention.';
+		}
+
+		$provider_labels = array(
+			'openai'    => 'OpenAI',
+			'anthropic' => 'Anthropic (Claude)',
+			'gemini'    => 'Google Gemini',
+		);
+
+		return array(
+			'state'            => $state,
+			'label'            => $label,
+			'message'          => $message,
+			'updated_at'       => '',
+			'provider'         => $provider,
+			'provider_label'   => $provider_labels[ $provider ],
+			'model'            => $model,
+			'enabled_surfaces' => $surfaces,
+			'key_presence'     => $key_presence,
+			'url'              => $url,
+			'capability'       => 'manage_options',
+		);
 	}
 
 	/**
@@ -422,16 +754,7 @@ final class Lunara_AI_Assistant_Classic {
 	 */
 	public static function get_enabled_post_types() {
 		$settings = self::get_settings();
-		$raw      = array_filter( array_map( 'trim', explode( ',', (string) $settings['post_types'] ) ) );
-		$raw      = array_map( 'sanitize_key', $raw );
-		$raw      = array_unique( $raw );
-		$enabled  = array();
-
-		foreach ( $raw as $post_type ) {
-			if ( post_type_exists( $post_type ) && post_type_supports( $post_type, 'editor' ) ) {
-				$enabled[] = $post_type;
-			}
-		}
+		$enabled  = self::resolve_saved_post_types( $settings['post_types'] );
 
 		return apply_filters( 'lunara_ai_assistant_classic_post_types', $enabled );
 	}
@@ -1399,6 +1722,25 @@ final class Lunara_AI_Assistant_Classic {
 
 		return $chunks ? trim( implode( "\n", $chunks ) ) : __( 'No text returned.', 'lunara-ai-assistant-classic' );
 	}
+}
+
+/**
+ * Public redacted Site Studio status API.
+ *
+ * @return array
+ */
+function lunara_ai_assistant_classic_site_studio_status(): array {
+	return Lunara_AI_Assistant_Classic::site_studio_status();
+}
+
+/**
+ * Public canonical settings destination for authorized callers.
+ *
+ * @return string
+ */
+function lunara_ai_assistant_classic_settings_url(): string {
+	$status = Lunara_AI_Assistant_Classic::site_studio_status();
+	return isset( $status['url'] ) && is_string( $status['url'] ) ? $status['url'] : '';
 }
 
 add_action( 'plugins_loaded', array( 'Lunara_AI_Assistant_Classic', 'init' ) );

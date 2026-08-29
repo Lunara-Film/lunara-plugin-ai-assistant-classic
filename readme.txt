@@ -2,7 +2,7 @@
 Contributors: lunara
 Requires at least: 6.3
 Requires PHP: 7.4
-Stable tag: 0.6.0
+Stable tag: 0.6.2
 License: GPL-2.0-or-later
 
 Private LUNARA editorial assistant for the WordPress Classic Editor, including Journal and Review post types.
@@ -31,6 +31,10 @@ Provider optionality: pick Anthropic (Claude), OpenAI, or Google Gemini from the
 Do not activate this alongside another plugin that uses the same editor surface unless you intentionally want both assistant UIs visible.
 
 == Changelog ==
+
+= 0.6.2 =
+* Added a capability-gated, redacted Site Studio status API and canonical settings URL helper.
+* Status reports fixed provider/model, editorial-surface, and key-presence fields without exposing credentials, prompts, history, or raw settings.
 
 = 0.6.0 =
 * Added an AI provider selector (Anthropic/Claude, OpenAI, Google Gemini, or Automatic). Choosing a provider routes every task to it so one API key is enough. The main Generate box previously required OpenAI specifically; it now uses the selected provider.

@@ -14,7 +14,13 @@ This plugin powers the Classic Editor meta box and private suggestion service fo
 
 ## Version
 
-Current baseline: `0.6.1`.
+Current baseline: `0.6.2`.
+
+### 0.6.2 Site Studio status API
+
+- Adds a capability-gated, redacted status projection for Site Studio.
+- Reports only allowlisted provider/model identifiers, enabled editorial surfaces, key-presence booleans, and the canonical settings destination.
+- Keeps credential option autoload migration deferred until a real WordPress database test can prove safe, byte-preserving, idempotent behavior.
 
 ### 0.6.1 Gemini credential hardening
 

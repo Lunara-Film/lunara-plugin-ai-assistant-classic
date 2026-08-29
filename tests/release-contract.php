@@ -15,8 +15,8 @@ if ( false === $plugin || false === $readme ) {
 }
 
 $required = array(
-	'Version:           0.6.1' => 'plugin header is not 0.6.1',
-	"LUNARA_AI_ASSISTANT_CLASSIC_VERSION', '0.6.1'" => 'runtime version is not 0.6.1',
+	'Version:           0.6.2' => 'plugin header is not 0.6.2',
+	"LUNARA_AI_ASSISTANT_CLASSIC_VERSION', '0.6.2'" => 'runtime version is not 0.6.2',
 	"'x-goog-api-key' => \$api_key" => 'Gemini key is not sent in the request header',
 	"':generateContent'" => 'Gemini Generate Content endpoint is missing',
 );
@@ -29,8 +29,8 @@ foreach ( $required as $needle => $message ) {
 if ( false !== strpos( $plugin, ':generateContent?key=' ) ) {
 	$failures[] = 'Gemini key remains in the request URL';
 }
-if ( false === strpos( $readme, 'Current baseline: `0.6.1`.' ) ) {
-	$failures[] = 'README baseline is not 0.6.1';
+if ( false === strpos( $readme, 'Current baseline: `0.6.2`.' ) ) {
+	$failures[] = 'README baseline is not 0.6.2';
 }
 
 if ( $failures ) {

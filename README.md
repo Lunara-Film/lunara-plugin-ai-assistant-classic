@@ -6,6 +6,17 @@ Private WordPress plugin source for the Lunara Film Classic Editor AI assistant.
 
 This plugin powers the Classic Editor meta box and private suggestion service for Lunara editorial packaging, rewrites, Journal support, Review support, and provider-routed suggestion calls.
 
+## Public markup contract
+
+Theme owns public presentation. Suggestions destined for articles must use
+semantic headings, paragraphs, lists and links, inheriting the existing Theme
+classes and tokens. Do not bundle style tags, inline layout/corner rules, fonts
+or a separate layout stylesheet with generated content. Keep editor assets
+private. See the Theme's `DESIGN.md`, `docs/PUBLIC-GEOMETRY.md` and
+`docs/REPOSITORY-ALIGNMENT.md`; `AGENTS.md` records the shared release rules.
+This is a contributor/review requirement, not an automatic output sanitizer.
+Existing saved prompts and provider settings are unchanged.
+
 ## Source Locations
 
 - Local source: `G:\01-Lunara-Website\Backups-And-Exports\lunara-backups\work\lunara-ai-assistant-classic`

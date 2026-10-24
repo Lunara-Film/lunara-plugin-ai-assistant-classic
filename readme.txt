@@ -1,15 +1,15 @@
-=== LUNARA AI Assistant Classic ===
+=== LUNARA FILM AI Assistant Classic ===
 Contributors: lunara
 Requires at least: 6.3
 Requires PHP: 7.4
 Stable tag: 0.6.0
 License: GPL-2.0-or-later
 
-Private LUNARA editorial assistant for the WordPress Classic Editor, including Journal and Review post types.
+Private LUNARA FILM editorial assistant for the WordPress Classic Editor, including Journal and Review post types.
 
 == Description ==
 
-Adds a Classic Editor meta box for LUNARA editorial packaging:
+Adds a Classic Editor meta box for LUNARA FILM editorial packaging:
 
 * titles
 * deks and excerpts
@@ -24,7 +24,7 @@ Default post types: post, journal, review.
 
 == Installation ==
 
-Upload the plugin zip and activate it. Then visit Settings > LUNARA AI Classic, choose an AI provider, and add the matching API key.
+Upload the plugin zip and activate it. Then visit Settings > LUNARA FILM AI Classic, choose an AI provider, and add the matching API key.
 
 Provider optionality: pick Anthropic (Claude), OpenAI, or Google Gemini from the AI provider dropdown. Choosing one provider routes every task to it, so a single API key is enough. "Automatic" uses whichever key is set (Claude preferred) and applies smart per-task routing when several keys are present. Keys can also be defined on the server: LUNARA_ANTHROPIC_API_KEY / ANTHROPIC_API_KEY, LUNARA_OPENAI_API_KEY / OPENAI_API_KEY, or LUNARA_GEMINI_API_KEY / GEMINI_API_KEY / GOOGLE_API_KEY.
 

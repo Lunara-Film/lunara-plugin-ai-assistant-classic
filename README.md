@@ -1,4 +1,4 @@
-# LUNARA AI Assistant Classic
+# LUNARA FILM AI Assistant Classic
 
 Private WordPress plugin source for the Lunara Film Classic Editor AI assistant.
 
@@ -25,7 +25,15 @@ Existing saved prompts and provider settings are unchanged.
 
 ## Version
 
-Current baseline: `0.6.1`.
+The version lives in one file: the plugin header and
+`LUNARA_AI_ASSISTANT_CLASSIC_VERSION` in `lunara-ai-assistant-classic.php`.
+The release contract checks that the two agree; no test pins the number.
+
+### 0.6.2 Always LUNARA FILM
+
+- Every name a person sees says LUNARA FILM: the plugin header, Settings > LUNARA FILM AI Classic (menu and page), the LUNARA FILM AI meta box, the system prompt label, two provider error messages and the default system prompt.
+- A saved system prompt is never rewritten. A site that saved settings keeps its own prompt text until it is edited in that settings field.
+- `tests/brand-name-contract.php` fails CI on a bare LUNARA in visible strings. The release contract no longer pins a version number.
 
 ### 0.6.1 Gemini credential hardening
 
@@ -38,7 +46,7 @@ Do not commit OpenAI, Anthropic, Gemini, Google, WordPress application passwords
 
 ## Verification
 
-- Run PHP lint and `php tests/release-contract.php` after edits.
-- Confirm Settings > LUNARA AI Classic loads.
-- Confirm Classic Editor screens still show the LUNARA AI meta box for configured post types.
+- Run PHP lint, `php tests/release-contract.php` and `php tests/brand-name-contract.php` after edits.
+- Confirm Settings > LUNARA FILM AI Classic loads.
+- Confirm Classic Editor screens still show the LUNARA FILM AI meta box for configured post types.
 - Confirm public routes do not leak AI settings, prompts, keys, or admin assets.

@@ -51,6 +51,9 @@ jobs:
       - name: Release contract
         run: php tests/release-contract.php
 
+      - name: Brand name in visible copy
+        run: php tests/brand-name-contract.php
+
       - name: JS syntax
         run: |
           set -e

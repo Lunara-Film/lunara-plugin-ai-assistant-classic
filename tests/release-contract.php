@@ -6,17 +6,14 @@
 
 $root = dirname( __DIR__ );
 $plugin = file_get_contents( $root . DIRECTORY_SEPARATOR . 'lunara-ai-assistant-classic.php' );
-$readme = file_get_contents( $root . DIRECTORY_SEPARATOR . 'README.md' );
 $failures = array();
 
-if ( false === $plugin || false === $readme ) {
+if ( false === $plugin ) {
 	fwrite( STDERR, "Could not read release files.\n" );
 	exit( 1 );
 }
 
 $required = array(
-	'Version:           0.6.1' => 'plugin header is not 0.6.1',
-	"LUNARA_AI_ASSISTANT_CLASSIC_VERSION', '0.6.1'" => 'runtime version is not 0.6.1',
 	"'x-goog-api-key' => \$api_key" => 'Gemini key is not sent in the request header',
 	"':generateContent'" => 'Gemini Generate Content endpoint is missing',
 );
@@ -29,8 +26,14 @@ foreach ( $required as $needle => $message ) {
 if ( false !== strpos( $plugin, ':generateContent?key=' ) ) {
 	$failures[] = 'Gemini key remains in the request URL';
 }
-if ( false === strpos( $readme, 'Current baseline: `0.6.1`.' ) ) {
-	$failures[] = 'README baseline is not 0.6.1';
+
+// The version lives in one file and is never pinned here: the header and the
+// runtime constant must agree.
+if ( ! preg_match( '/^[ \t\/*#@]*Version:\s*(\S+)\s*$/m', $plugin, $header_version )
+	|| ! preg_match( "/define\(\s*'LUNARA_AI_ASSISTANT_CLASSIC_VERSION',\s*'([^']+)'\s*\)/", $plugin, $runtime_version ) ) {
+	$failures[] = 'plugin header or runtime version is missing';
+} elseif ( $header_version[1] !== $runtime_version[1] ) {
+	$failures[] = 'plugin header version ' . $header_version[1] . ' does not match runtime version ' . $runtime_version[1];
 }
 
 if ( $failures ) {

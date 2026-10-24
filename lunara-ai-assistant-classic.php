@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name:       LUNARA AI Assistant Classic
- * Description:       Private LUNARA editorial assistant for the Classic Editor, including Journal and Review post types.
- * Version:           0.6.1
+ * Plugin Name:       LUNARA FILM AI Assistant Classic
+ * Description:       Private LUNARA FILM editorial assistant for the Classic Editor, including Journal and Review post types.
+ * Version:           0.6.2
  * Author:            LUNARA FILM
  * Requires at least: 6.3
  * Requires PHP:      7.4
@@ -13,7 +13,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'LUNARA_AI_ASSISTANT_CLASSIC_VERSION', '0.6.1' );
+define( 'LUNARA_AI_ASSISTANT_CLASSIC_VERSION', '0.6.2' );
 define( 'LUNARA_AI_ASSISTANT_CLASSIC_FILE', __FILE__ );
 define( 'LUNARA_AI_ASSISTANT_CLASSIC_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LUNARA_AI_ASSISTANT_CLASSIC_URL', plugin_dir_url( __FILE__ ) );
@@ -213,7 +213,7 @@ final class Lunara_AI_Assistant_Classic {
 	 * @return string
 	 */
 	public static function default_system_prompt() {
-		return "You are the LUNARA editorial assistant inside Dalton Johnson's WordPress Classic Editor. Your primary job is to help Dalton revise, package, and sharpen his own writing. You may generate editorial furniture: titles, deks, subheaders, H2 options, pull quotes, capsule lines, social copy, and packaging audits from Dalton's draft or notes. When Dalton explicitly asks for a rewrite, or uses rewrite mode, you may completely rewrite the referenced passage.\n\nLUNARA rules:\n- Preserve Dalton's argument. Do not replace his authorship.\n- In rewrite mode, fully rewrite the referenced text if asked. You may change structure, rhythm, phrasing, transitions, and sentence order, but keep Dalton's meaning, factual claims, and critical position intact.\n- Support both Reviews and Journal entries. Journal work can be shorter, looser, and more process-aware, but it must still have a clear editorial reason to exist.\n- Titles should be sharp, film-specific, and printable. Avoid generic SEO sludge.\n- Deks should be one sentence when possible, italic-ready, carrying thesis, temperature, and stakes.\n- H2 subheaders must be in-world, load-bearing lines pulled from the piece's argument, images, locations, gestures, or moral transaction. Never use generic labels like The Performances, The Turn, Final Thoughts, Themes, Cinematography, or Conclusion.\n- Pull quotes must be memorable, self-contained, and accurate to the draft. Separate exact lifts from sharpened rewrites.\n- No critic names, Rotten Tomatoes, box office, or vague consensus padding.\n- Avoid these phrases: In a world where, It's a testament to, A masterclass in, The film explores, The viewer is left to, We are forced to confront, What lingers is.\n- Prefer plain force over ornate fog. The line should cut.\n- ASCII punctuation only. Use straight quotes and -- for em dashes.\n\nWhen the user asks for options, return grouped options with brief labels. When generating for insertion, keep the output clean enough to paste into WordPress. In rewrite mode, return the rewritten passage first with no preamble.";
+		return "You are the LUNARA FILM editorial assistant inside Dalton Johnson's WordPress Classic Editor. Your primary job is to help Dalton revise, package, and sharpen his own writing. You may generate editorial furniture: titles, deks, subheaders, H2 options, pull quotes, capsule lines, social copy, and packaging audits from Dalton's draft or notes. When Dalton explicitly asks for a rewrite, or uses rewrite mode, you may completely rewrite the referenced passage.\n\nLUNARA FILM rules:\n- Preserve Dalton's argument. Do not replace his authorship.\n- In rewrite mode, fully rewrite the referenced text if asked. You may change structure, rhythm, phrasing, transitions, and sentence order, but keep Dalton's meaning, factual claims, and critical position intact.\n- Support both Reviews and Journal entries. Journal work can be shorter, looser, and more process-aware, but it must still have a clear editorial reason to exist.\n- Titles should be sharp, film-specific, and printable. Avoid generic SEO sludge.\n- Deks should be one sentence when possible, italic-ready, carrying thesis, temperature, and stakes.\n- H2 subheaders must be in-world, load-bearing lines pulled from the piece's argument, images, locations, gestures, or moral transaction. Never use generic labels like The Performances, The Turn, Final Thoughts, Themes, Cinematography, or Conclusion.\n- Pull quotes must be memorable, self-contained, and accurate to the draft. Separate exact lifts from sharpened rewrites.\n- No critic names, Rotten Tomatoes, box office, or vague consensus padding.\n- Avoid these phrases: In a world where, It's a testament to, A masterclass in, The film explores, The viewer is left to, We are forced to confront, What lingers is.\n- Prefer plain force over ornate fog. The line should cut.\n- ASCII punctuation only. Use straight quotes and -- for em dashes.\n\nWhen the user asks for options, return grouped options with brief labels. When generating for insertion, keep the output clean enough to paste into WordPress. In rewrite mode, return the rewritten passage first with no preamble.";
 	}
 
 	/**
@@ -221,8 +221,8 @@ final class Lunara_AI_Assistant_Classic {
 	 */
 	public static function add_settings_page() {
 		add_options_page(
-			__( 'LUNARA AI Assistant Classic', 'lunara-ai-assistant-classic' ),
-			__( 'LUNARA AI Classic', 'lunara-ai-assistant-classic' ),
+			__( 'LUNARA FILM AI Assistant Classic', 'lunara-ai-assistant-classic' ),
+			__( 'LUNARA FILM AI Classic', 'lunara-ai-assistant-classic' ),
 			'manage_options',
 			'lunara-ai-assistant-classic',
 			array( __CLASS__, 'render_settings_page' )
@@ -333,8 +333,8 @@ final class Lunara_AI_Assistant_Classic {
 		$settings = self::get_settings();
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'LUNARA AI Assistant Classic', 'lunara-ai-assistant-classic' ); ?></h1>
-			<p><?php esc_html_e( 'Powers the LUNARA AI meta box and the private Control Desk suggestion service.', 'lunara-ai-assistant-classic' ); ?></p>
+			<h1><?php esc_html_e( 'LUNARA FILM AI Assistant Classic', 'lunara-ai-assistant-classic' ); ?></h1>
+			<p><?php esc_html_e( 'Powers the LUNARA FILM AI meta box and the private Control Desk suggestion service.', 'lunara-ai-assistant-classic' ); ?></p>
 			<form method="post" action="options.php">
 				<?php settings_fields( 'lunara_ai_assistant_classic_group' ); ?>
 				<table class="form-table" role="presentation">
@@ -405,7 +405,7 @@ final class Lunara_AI_Assistant_Classic {
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="lunara-classic-system-prompt"><?php esc_html_e( 'LUNARA system prompt', 'lunara-ai-assistant-classic' ); ?></label></th>
+						<th scope="row"><label for="lunara-classic-system-prompt"><?php esc_html_e( 'LUNARA FILM system prompt', 'lunara-ai-assistant-classic' ); ?></label></th>
 						<td><textarea id="lunara-classic-system-prompt" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[system_prompt]" rows="16" class="large-text code"><?php echo esc_textarea( $settings['system_prompt'] ); ?></textarea></td>
 					</tr>
 				</table>
@@ -443,7 +443,7 @@ final class Lunara_AI_Assistant_Classic {
 		foreach ( self::get_enabled_post_types() as $post_type ) {
 			add_meta_box(
 				'lunara-ai-assistant-classic',
-				__( 'LUNARA AI', 'lunara-ai-assistant-classic' ),
+				__( 'LUNARA FILM AI', 'lunara-ai-assistant-classic' ),
 				array( __CLASS__, 'render_meta_box' ),
 				$post_type,
 				'side',
@@ -460,7 +460,7 @@ final class Lunara_AI_Assistant_Classic {
 	public static function render_meta_box( $post ) {
 		?>
 		<div id="lunara-ai-classic-root" class="lunara-ai-classic-root" data-post-type="<?php echo esc_attr( $post->post_type ); ?>">
-			<p class="description"><?php esc_html_e( 'Generate LUNARA titles, deks, H2s, pull quotes, and packaging notes from this draft.', 'lunara-ai-assistant-classic' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Generate LUNARA FILM titles, deks, H2s, pull quotes, and packaging notes from this draft.', 'lunara-ai-assistant-classic' ); ?></p>
 
 			<label for="lunara-ai-classic-mode"><?php esc_html_e( 'Mode', 'lunara-ai-assistant-classic' ); ?></label>
 			<select id="lunara-ai-classic-mode" class="widefat">
@@ -632,12 +632,12 @@ final class Lunara_AI_Assistant_Classic {
 		$provider = self::get_active_provider();
 		$api_key  = self::get_provider_api_key( $provider );
 		if ( ! $api_key ) {
-			return new WP_Error( 'lunara_missing_key', sprintf( /* translators: %s: provider name */ __( '%s API key is missing. Add it under Settings > LUNARA AI Classic.', 'lunara-ai-assistant-classic' ), self::provider_label( $provider ) ), array( 'status' => 400 ) );
+			return new WP_Error( 'lunara_missing_key', sprintf( /* translators: %s: provider name */ __( '%s API key is missing. Add it under Settings > LUNARA FILM AI Classic.', 'lunara-ai-assistant-classic' ), self::provider_label( $provider ) ), array( 'status' => 400 ) );
 		}
 
 		$model = self::get_provider_model( $provider );
 		if ( ! $model ) {
-			return new WP_Error( 'lunara_missing_provider_model', sprintf( /* translators: %s: provider name */ __( '%s model is missing. Set it under Settings > LUNARA AI Classic.', 'lunara-ai-assistant-classic' ), self::provider_label( $provider ) ), array( 'status' => 400 ) );
+			return new WP_Error( 'lunara_missing_provider_model', sprintf( /* translators: %s: provider name */ __( '%s model is missing. Set it under Settings > LUNARA FILM AI Classic.', 'lunara-ai-assistant-classic' ), self::provider_label( $provider ) ), array( 'status' => 400 ) );
 		}
 
 		$mode           = sanitize_key( $request->get_param( 'mode' ) );
@@ -773,7 +773,7 @@ final class Lunara_AI_Assistant_Classic {
 	 */
 	private static function build_user_prompt( $mode, $post_type, $film_title, $film_year, $post_title, $post_content, $reference_text, $notes ) {
 		$mode_instructions = array(
-			'titles'  => 'Generate 12 title options: 4 clean/critical, 4 sharper LUNARA voice, 4 SEO-aware but not bland. Include one-line reasoning for each.',
+			'titles'  => 'Generate 12 title options: 4 clean/critical, 4 sharper LUNARA FILM voice, 4 SEO-aware but not bland. Include one-line reasoning for each.',
 			'dek'     => 'Generate 8 italic-ready dek options. One sentence each. Each must contain thesis, temperature, and stakes.',
 			'h2'      => 'Generate 12 H2 subheader options. They must be in-world, load-bearing, film-specific when applicable, and not generic labels. Group them by function: opener, body turn, verdict closer.',
 			'quotes'  => 'Extract or sharpen 10 pull quotes. Separate exact lifts from sharpened rewrites. Keep them self-contained and quote-card ready.',
